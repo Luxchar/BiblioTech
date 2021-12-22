@@ -1,0 +1,92 @@
+Projet de Luc Charlopeau et Yannis Andre
+
+
+Introduction : Notre projet est une 'bibliothèque' de jeux vidéos permettant à ses adhérents de proposer à la
+location leurs propres jeux, louer des jeux. La bibliothèque étant réservée à ses adhérents, il faut s'identifier
+ou s'inscrire (adhérer) à la bibliothèque.
+
+1)
+
+Modèle entités-associations: voir fichier pdf
+
+
+Schéma relationnel : 
+
+CREATE TABLE ADHERENT ( Nom TEXT, Prenom TEXT, age INT, code_adherent TEXT PRIMARY KEY)
+CREATE TABLE EMPRUNT (retour DATE, code_adherent TEXT REFERENCES ADHERENT(code_adherent), code_jeux TEXT REFERENCES JEUX(code_jeux), PRIMARY KEY(code_adherent,code_jeux), UNIQUE(code_adherent,code_jeux))
+CREATE TABLE JEUX (Nom_jeux TEXT, editeur TEXT, annee DATE, prix INT, code_jeux TEXT PRIMARY KEY, genre TEXT, age_minimum INT, nb_emprunt INT,prenom_donneur TEXT, nom_donneur TEXT, CHECK(age_minimum >= 3 AND age_minimum <= 18))
+
+2)
+
+Actions:
+
+Un nouvel adhérent est ajouté à la BDD:
+INSERT INTO ADHERENT VALUES ('Sielvabrowski', 'Adrien', 26, '4bbddd47');
+
+Un adhérent apporte un jeux:
+INSERT INTO JEUX VALUES ('Dark Souls 2','FROMSOFTWARE','2014-03-11', 22, '46xh', 'Action-rpg',16,0,'Adrien', 'Sielvabrowski');
+
+Un adhérent loue un jeux:
+INSERT INTO EMPRUNT VALUES ('2021-03-02','4bbddd47','45xn');
+
+Un adhérent rapporte le jeu:
+DELETE FROM EMPRUNT WHERE code_adherent = '4bbddd47';
+
+Un adhérent reprend un jeu:
+DELETE FROM JEUX WHERE prenom_donneur = 'Adrien' AND nom_donneur ='Sielvabrowski' AND Nom_jeux = 'Dark Souls 2';
+
+Mises à jour:
+
+Un adhérent demande à changer ses coordonnées:
+UPDATE ADHERENT SET age = 25 WHERE Prenom = 'Adrien' AND Nom = 'Sielvabrowski';
+
+Un jeux est retiré de la base:
+DELETE FROM JEUX WHERE Nom_jeux = 'GTA V';
+
+Le prix d'un jeux est modifié:
+UPDATE JEUX SET prix = 9 WHERE Nom_jeux ='GTA V';
+
+
+Analyse des données:
+
+--Donne le jeux le plus emprunté--
+SELECT Nom_jeux,max(nb_emprunt) FROM JEUX;
+
+renvoie >>   Nom_jeux     max(nb_emprunt)
+	  1 Overlord II                  4
+
+-- Affiche la rente d'argent générée par la location de tous les jeux-vidéos --
+SELECT sum(prix * nb_emprunt) as recette_totale FROM JEUX;
+
+renvoie >> recette_totale
+	  1            214
+
+-- Affiche la rentre d'argent générée par la location de chaque jeux individuellement --
+SELECT Nom_jeux, (prix * nb_emprunt) as recette FROM JEUX;
+
+renvoie >> Nom_jeux    recette
+	 1  GTA V            74
+	 2  Dark souls 2     22
+
+-- Nombre de livres empruntés actuellement par chaque Adhérent à la bibliothèque --
+SELECT Nom,Prenom,count(*) as nb_livres_empruntés FROM EMPRUNT
+JOIN ADHERENT ON EMPRUNT.code_adherent = ADHERENT.code_adherent
+GROUP BY Nom,Prenom;
+
+renvoie >> Nom         Prenom        nb_livres_empruntés
+	1 Le fauconnier  Amine                           1
+	2 Andre          Yannis                          2
+	3 Charlopeau     Luc                             4
+ 
+-- Sélectionne les jeux pouvant être empruntés --    
+SELECT Nom_jeux FROM JEUX WHERE NOT code_jeux IN (SELECT code_jeux FROM EMPRUNT);
+
+renvoie >> 	Nom_jeux
+		1 PokemonEmeraude
+
+
+3) Création de l'interface:
+Voir programme python 
+
+
+
